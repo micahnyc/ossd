@@ -1,0 +1,12 @@
+# Node.js
+node_modules/
+
+# Stream Deck files
+*.sdPlugin/bin
+*.sdPlugin/logs
+
+# Ignore the entire .vscode directory
+.vscode/
+
+# Exception: include launch.json for shared debugging configurations
+!.vscode/launch.json

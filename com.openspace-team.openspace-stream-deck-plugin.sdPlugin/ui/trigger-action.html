@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>OpenSpace Action</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+    <script src="openspace-api.js"></script>
+    <style>
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            color: white;
+            background-color: rgb(27, 27, 27);
+        }
+        #actions-table {
+            margin-top: 10px;
+            flex-wrap: wrap;
+            display: flex;
+        }
+        .folder-button {
+            background-color: #2e2e2e;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            word-wrap: break-word;
+            width: 90%;
+        }
+        .action-button {
+            background-color: #1971c2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100px;
+            border-radius: 5px;
+            height: 60px;
+            word-wrap: break-word;
+            margin: 10px;
+            padding: 5px;
+            overflow: hidden;
+        }
+
+        .back-button {
+            background-color: #555555;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 100%;
+            padding-bottom: 20px;
+        }
+
+        .css-folder-icon {
+            margin: 10px;
+            width: 100px;
+            height: 60px;
+            word-wrap: break-word;
+            background-color: #2e2e2e; /* Folder base color */
+            border-radius: 0 5px 5px 5px;
+            position: relative;
+        }
+        
+        .css-folder-icon::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 30px;
+            height: 10px;
+            background-color: #2e2e2e; /* Folder tab color */
+            border-radius: 5px 5px 0 0;
+        }
+    </style>
+</head>
+
+<body>
+     <sdpi-item label="Action Details">
+        <sdpi-textfield setting="actionName" disabled id="chosenName" placeholder="Choose an action below"></sdpi-textfield>
+        <sdpi-textfield setting="actionPath" disabled id="chosenPath" placeholder="Choose an action below"></sdpi-textfield>
+        <sdpi-textfield setting="actionIdentifier" disabled id="chosenIdentifier" placeholder="Choose an action below"></sdpi-textfield>
+    </sdpi-item>
+    <div id="heading">connecting to openspace</div><hr>
+    <div id="actions-table"></div>
+    <script>
+
+        const { streamDeckClient } = SDPIComponents;
+
+        function showFolderPath(subTreePath) {
+            let container = document.getElementById('actions-table');
+            container.innerHTML = '';
+
+            subTree = window.fullTree;
+            console.log('showing path:', subTreePath);
+            let parts = subTreePath.split('/');
+            for (let part of parts) {
+                if (part === '') continue;
+                subTree = subTree[part];
+            }
+            
+            if (subTreePath != "") {
+                let backButton = document.createElement('button');
+                backButton.innerText = '⬅ Back';
+                backButton.onclick = function () {
+                    let parentPath = subTreePath.split('/').slice(0, -1).join('/');
+                    showFolderPath(parentPath);
+                };
+                backButton.className = 'back-button';
+                container.appendChild(backButton);
+            }
+            console.log('sub tree:', subTree);
+            for (let itemKey of Object.keys(subTree)) {
+                let item = subTree[itemKey];
+                console.log('sub treeitemm:', itemKey, item);
+
+                if (Array.isArray(item)) {
+                    for (let action of item) {
+                        let actionButton = document.createElement('button');
+                        actionButton.innerText = action.Name;
+                        actionButton.onclick = function () {
+                            streamDeckClient.setSettings({
+                                actionName: action.Name,
+                                actionIdentifier: action.Identifier,
+                                actionPath: action.GuiPath
+                            });
+                            document.getElementById('chosenPath').value = action.GuiPath;
+                            document.getElementById('chosenIdentifier').value = action.Identifier;
+                            document.getElementById('chosenName').value = action.Name;
+                        };
+                        actionButton.className = 'action-button';
+                        container.appendChild(actionButton);
+                        container.appendChild(document.createElement('br'));
+                        console.log('added action:', action.Name);
+                    }
+                } else {
+                    // Handle folder case
+                    let folderDiv = document.createElement('div');
+                    folderDiv.className = 'css-folder-icon';
+                    container.appendChild(folderDiv);
+                    let button = document.createElement('button');
+                    button.innerText = itemKey;
+                    button.className = 'folder-button';
+                    folderDiv.appendChild(button);
+                    button.onclick = function () {
+                        showFolderPath(subTreePath + '/' + itemKey);
+                    };
+                    console.log('added folder:', item);
+                }
+                
+            }
+        }
+
+
+        var api = window.openspaceApi('localhost', 4682);
+        api.onDisconnect(function () {
+            console.log('Disconnected.');
+            document.getElementById('heading').innerText = 'Disconnected from OpenSpace. Reconnecting in 5 seconds...';
+            setTimeout(() => {
+                api.connect();
+                document.getElementById('heading').innerText = 'Reconnecting to OpenSpace...';
+            }, 5000);
+        });
+        
+        api.onConnect(async function () {
+            openspace = await api.library();
+            let actions = await openspace.action.actions();
+            let container = document.getElementById('actions-table');
+            console.log(actions[1]);
+            actions = actions['1'];
+            //loop through the keys of actions
+            window.pathHash = {};
+            for (let key in actions) {
+                let action = actions[key];
+                if (window.pathHash[action.GuiPath]) {
+                    window.pathHash[action.GuiPath].push(action);
+                } else {
+                    window.pathHash[action.GuiPath] = [action];
+                }
+            }
+
+            document.getElementById('heading').innerText = 'Choose an action:';
+
+            window.fullTree = {};
+            for (let key in window.pathHash) {
+                let parts = key.split('/');
+                let current = window.fullTree;
+                for (let part of parts) {
+                    if (!current[part]) {
+                        current[part] = {};
+                    }
+                    current = current[part];
+                }
+                current.actions = window.pathHash[key];
+            }
+            window.fullTree = window.fullTree[""];
+            console.log(window.fullTree);
+
+            showFolderPath("");
+
+        });
+        
+        api.connect();
+        
+
+
+
+
+
+
+        </script>
+</body>
+
+</html>

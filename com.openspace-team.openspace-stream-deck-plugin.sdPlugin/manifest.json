@@ -1,0 +1,99 @@
+{
+	"Name": "OpenSpace",
+	"Version": "0.1.0.0",
+	"Author": "OpenSpace Team",
+	"Actions": [
+		{
+			"Name": "CustomScript",
+			"UUID": "com.openspace-team.openspace-stream-deck-plugin.custom-script",
+			"Icon": "imgs/actions/custom-script/icon",
+			"Tooltip": "Executes a custom script.",
+			"PropertyInspectorPath": "ui/custom-script.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/custom-script/key",
+					"TitleAlignment": "middle",
+					"FontStyle": "Bold"
+				}
+			]
+		},
+		{
+			"Name": "TriggerAction",
+			"UUID": "com.openspace-team.openspace-stream-deck-plugin.trigger-action",
+			"Icon": "imgs/actions/trigger-action/icon",
+			"Tooltip": "Triggers a predefined action in OpenSpace.",
+			"PropertyInspectorPath": "ui/trigger-action.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/trigger-action/key",
+					"TitleAlignment": "middle",
+					"FontStyle": "Bold"
+				}
+			]
+		},
+		{
+			"Name": "FlyTo",
+			"UUID": "com.openspace-team.openspace-stream-deck-plugin.flyto",
+			"Icon": "imgs/actions/flyto/icon",
+			"Tooltip": "Fly to a specific node in OpenSpace.",
+			"PropertyInspectorPath": "ui/selectfocusable.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/flyto/key",
+					"TitleAlignment": "middle",
+					"FontStyle": "Bold"
+				}
+			]
+		},
+		{
+			"Name": "JumpTo",
+			"UUID": "com.openspace-team.openspace-stream-deck-plugin.jumpto",
+			"Icon": "imgs/actions/jumpto/icon",
+			"Tooltip": "Jump to a specific node in OpenSpace.",
+			"PropertyInspectorPath": "ui/selectfocusable.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/jumpto/key",
+					"TitleAlignment": "middle",
+					"FontStyle": "Bold"
+				}
+			]
+		}
+	],
+	"Category": "OpenSpace",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Control OpenSpace with your Stream Deck",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 2,
+	"Software": {
+		"MinimumVersion": "6.5"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "20",
+		"Debug": "enabled"
+	},
+	"UUID": "com.openspace-team.openspace-stream-deck-plugin"
+}

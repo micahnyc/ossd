@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>OpenSpace FlyTo</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+    <script src="openspace-api.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: white;
+            background-color: rgb(27, 27, 27);
+        }
+        #heading {
+            padding: 10px;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        #focusable-list {
+            background-color: rgb(27, 27, 27);
+            color: white;
+            border: none;
+            padding: 10px;
+        }
+
+        #searchbox {
+            margin: 10px;
+            overflow: hidden;
+
+        }
+    </style>
+</head>
+<body>
+    <div id="heading">connecting to openspace</div><hr>
+
+    <div id="searchbox"></div>
+
+    <select
+        id="focusable-list"
+        style="width: 100%; height: 100%; font-size: 16px; background-color: rgb(27, 27, 27); color: white; border: none;">
+    </select>
+
+
+    <script>
+        const focusableList = document.getElementById("focusable-list");
+        const { streamDeckClient } = SDPIComponents;
+
+
+        var api = window.openspaceApi('localhost', 4682);
+        api.onDisconnect(function () {
+            document.getElementById('heading').innerText = 'Disconnected from OpenSpace. Reconnecting in 5 seconds...';
+            setTimeout(() => {
+                api.connect();
+                document.getElementById('heading').innerText = 'Reconnecting to OpenSpace...';
+            }, 5000);
+        });
+
+        api.onConnect(async function () {
+            openspace = await api.library();
+            document.getElementById('heading').innerText = 'Select a target';
+            let itemDict = await fetchFocusableItems();
+            let items = Object.values(itemDict);
+            //sort items alphabetically
+            items.sort();
+            for (let item of items) {
+                let option = document.createElement("option");
+                option.value = item;
+                option.text = item;
+                focusableList.appendChild(option);
+            }
+
+            document.getElementById('searchbox').innerHTML = `<input type="text" id="search-input" placeholder="Search..." style="width: 100%; padding: 10px; font-size: 16px; background-color: rgb(27, 27, 27); color: white; border: none;">`;
+            const searchInput = document.getElementById("search-input");
+            searchInput.addEventListener("keyup", function () {
+                const filter = searchInput.value.toLowerCase();
+                const options = focusableList.getElementsByTagName("option");
+                console.log('filtering options:', filter);
+                let visibleCount = 0;
+                for (let i = 0; i < options.length; i++) {
+                    const option = options[i];
+                    const text = option.text.toLowerCase();
+                    if (text.includes(filter)) {
+                        option.style.display = "";
+                        visibleCount++;
+                    } else {
+                        option.style.display = "none";
+                    }
+                }
+                focusableList.size = visibleCount > 0 ? visibleCount : 1; 
+            });
+
+        });
+
+        api.connect();
+
+        focusableList.addEventListener("change", function () {
+            let selectedIdentifier = focusableList.value;
+            streamDeckClient.setSettings({ Identifier: selectedIdentifier });
+            focusableList.size = 1;
+            console.log('selected focusable item:', selectedIdentifier);
+            const searchInput = document.getElementById("search-input");
+            searchInput.value = "";
+            const options = focusableList.getElementsByTagName("option");
+            for (let i = 0; i < options.length; i++) {
+                options[i].style.display = "";
+            }
+        });
+
+        async function fetchFocusableItems() {
+            let items = await globalThis.openspace.sceneGraphNodes();
+            items = items["1"]; // Get the array of items
+            return items;
+        }
+
+
+    
+    </script>
+</body>
+</html>
